@@ -346,13 +346,19 @@ async function main() {
   console.log(`  found: ${clients.map((c) => c.name).join(", ")}`);
 
   const picks = await checkbox({
-    message: "Install DiscordMCP into which clients?",
+    message: "Install DiscordMCP into which clients?  (SPACE to toggle, ENTER to confirm — nothing selected by default)",
     choices: clients.map((c) => ({
       name: `${c.name}  →  ${c.config}`,
       value: c,
-      checked: true,
+      checked: false,
     })),
+    required: false,
   });
+
+  if (picks.length === 0) {
+    console.log("\nNothing selected. Add the MCP manually — see README.");
+    return;
+  }
 
   for (const c of picks) {
     try {
