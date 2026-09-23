@@ -7,12 +7,41 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { Client, TextChannel, DMChannel, GroupDMChannel, Message } from "discord.js-selfbot-v13";
 import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import path from "path";
+import fs from "fs";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, "..");
+
+for (const candidate of [
+  path.join(projectRoot, ".env"),
+  path.join(process.cwd(), ".env"),
+]) {
+  if (fs.existsSync(candidate)) {
+    dotenv.config({ path: candidate });
+    break;
+  }
+}
+
+if (!process.env.DISCORD_TOKEN && process.env.DISCORD_TOKEN_FILE) {
+  try {
+    const p = process.env.DISCORD_TOKEN_FILE;
+    process.env.DISCORD_TOKEN = fs.readFileSync(p, "utf8").trim();
+  } catch (err: any) {
+    console.error(`[discord-mcp] failed to read DISCORD_TOKEN_FILE: ${err?.message ?? err}`);
+  }
+}
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
-  console.error("[discord-mcp] DISCORD_TOKEN is not set. Put it in .env or export it before starting.");
+  console.error(
+    "[discord-mcp] DISCORD_TOKEN not found. Options:\n" +
+    `  1) create ${path.join(projectRoot, ".env")} with a line DISCORD_TOKEN=your_token\n` +
+    "  2) set env var DISCORD_TOKEN_FILE to a file containing just the token\n" +
+    "  3) export DISCORD_TOKEN before launching the server",
+  );
   process.exit(1);
 }
 

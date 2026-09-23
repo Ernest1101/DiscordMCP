@@ -60,11 +60,26 @@ Never publish this token and never share it with anyone.
 
 ## Configuration
 
-Copy `.env.example` to `.env` and paste your token:
+> 🔒 **Do not put your token into the MCP client config.** Client configs are often opened during demos/screenshares. Keep the token in a separate file that stays on your machine.
+
+### Recommended: `.env` file in the project folder
+
+Copy `.env.example` to `.env` inside the `DiscordMCP/` folder and paste your token:
 
 ```
 DISCORD_TOKEN=your_token_here
 ```
+
+The server automatically reads this file at startup. `.env` is git-ignored, so it will never be committed.
+
+### Alternative: separate token file (`DISCORD_TOKEN_FILE`)
+
+If you want to keep the token even further away from the repo — e.g. in `%APPDATA%\discord-mcp\token.txt` or `~/.config/discord-mcp/token`:
+
+1. Create a plain text file containing **just the token** (no quotes, no `DISCORD_TOKEN=`).
+2. Point the server at it via the `DISCORD_TOKEN_FILE` env var in your MCP client config.
+
+That way the config only stores a **path**, not the token itself.
 
 ## Claude Desktop setup
 
@@ -73,7 +88,22 @@ Open the Claude Desktop config:
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-Add this under `mcpServers`:
+Add this under `mcpServers` — **no token in the config**:
+
+```json
+{
+  "mcpServers": {
+    "discord": {
+      "command": "node",
+      "args": ["C:\\path\\to\\DiscordMCP\\dist\\index.js"]
+    }
+  }
+}
+```
+
+The server picks up the token from `DiscordMCP/.env` automatically.
+
+Prefer a separate token file? Point at it via env:
 
 ```json
 {
@@ -82,7 +112,7 @@ Add this under `mcpServers`:
       "command": "node",
       "args": ["C:\\path\\to\\DiscordMCP\\dist\\index.js"],
       "env": {
-        "DISCORD_TOKEN": "your_token_here"
+        "DISCORD_TOKEN_FILE": "C:\\Users\\you\\AppData\\Roaming\\discord-mcp\\token.txt"
       }
     }
   }
@@ -97,7 +127,7 @@ Restart Claude Desktop — the `discord` tool set will show up in the tools list
 claude mcp add discord -- node C:\path\to\DiscordMCP\dist\index.js
 ```
 
-The token will be picked up from `.env` in the project folder, or pass it via `--env DISCORD_TOKEN=...`.
+Token is loaded from `DiscordMCP/.env` or from a path set in `DISCORD_TOKEN_FILE` — never put it on the command line.
 
 ## Other MCP clients (Cursor, Cline, etc.)
 
@@ -106,8 +136,12 @@ The server speaks the standard MCP stdio protocol. Any MCP client launches it th
 ```
 command: node
 args:    ["dist/index.js"]
-env:     DISCORD_TOKEN=...
 ```
+
+Token source is picked up in this order:
+1. `DiscordMCP/.env` file (recommended)
+2. File pointed to by `DISCORD_TOKEN_FILE` env var
+3. `DISCORD_TOKEN` env var (least safe — visible in configs)
 
 ## Development
 
