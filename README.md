@@ -46,10 +46,32 @@ An MCP server that gives Claude and other AI assistants access to your Discord: 
 git clone https://github.com/Ernest1101/DiscordMCP.git
 cd DiscordMCP
 npm install
+npm run setup
+```
+
+That's it. The setup wizard will:
+
+1. Scan your local Discord desktop client for logged-in accounts (Windows).
+2. Show you a menu of accounts (by real username, verified against Discord's API).
+3. Save the chosen token to `DiscordMCP/.env` — never sent anywhere.
+4. Build the server (`npm run build`).
+5. Detect installed AI clients (Claude Desktop, Cursor, Claude Code, Continue) and offer to install the MCP config for you.
+
+<details>
+<summary>Manual setup (skip the wizard)</summary>
+
+```bash
+npm install
 npm run build
 ```
 
+Then create a `.env` with your token — see [Getting your user token](#getting-your-user-token) below.
+
+</details>
+
 ## Getting your user token
+
+*(If you ran `npm run setup` above and it detected your account, you can skip this.)*
 
 1. Open Discord in a browser.
 2. F12 → **Network** tab.
