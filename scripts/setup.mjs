@@ -130,19 +130,37 @@ async function verifyToken(token) {
   }
 }
 
+function claudeCliAvailable() {
+  const cmd = process.platform === "win32" ? "where" : "which";
+  try {
+    execFileSync(cmd, ["claude"], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function detectAiClients() {
   const clients = [];
   const home = os.homedir();
 
-  const claudeDir =
+  const claudeDesktopDir =
     process.platform === "darwin"
       ? path.join(home, "Library", "Application Support", "Claude")
       : path.join(process.env.APPDATA || "", "Claude");
-  if (fs.existsSync(claudeDir)) {
+  if (fs.existsSync(claudeDesktopDir)) {
     clients.push({
       name: "Claude Desktop",
-      config: path.join(claudeDir, "claude_desktop_config.json"),
+      config: path.join(claudeDesktopDir, "claude_desktop_config.json"),
       format: "mcpServers",
+    });
+  }
+
+  if (claudeCliAvailable() || fs.existsSync(path.join(home, ".claude.json"))) {
+    clients.push({
+      name: "Claude Code",
+      config: path.join(home, ".claude.json"),
+      format: "claude-cli",
     });
   }
 
@@ -151,15 +169,6 @@ function detectAiClients() {
     clients.push({
       name: "Cursor",
       config: path.join(cursorDir, "mcp.json"),
-      format: "mcpServers",
-    });
-  }
-
-  const claudeCodeDir = path.join(home, ".claude");
-  if (fs.existsSync(claudeCodeDir)) {
-    clients.push({
-      name: "Claude Code",
-      config: path.join(claudeCodeDir, "claude_desktop_config.json"),
       format: "mcpServers",
     });
   }
@@ -177,12 +186,31 @@ function detectAiClients() {
 }
 
 function installMcpConfig(client, serverPath) {
+  if (client.format === "claude-cli") {
+    // Claude Code stores MCP servers inside a large ~/.claude.json; hand-editing
+    // that file is fragile, so delegate to the official CLI instead.
+    const cmd = process.platform === "win32" ? "claude.cmd" : "claude";
+    try {
+      // Remove any prior registration so re-runs are idempotent.
+      execFileSync(cmd, ["mcp", "remove", "discord", "--scope", "user"], {
+        stdio: "ignore",
+      });
+    } catch {
+      // no prior entry — fine
+    }
+    execFileSync(
+      cmd,
+      ["mcp", "add", "discord", "--scope", "user", "--", "node", serverPath],
+      { stdio: "inherit" },
+    );
+    return;
+  }
+
   let cfg = {};
   if (fs.existsSync(client.config)) {
     try {
       cfg = JSON.parse(fs.readFileSync(client.config, "utf8"));
     } catch {
-      // corrupted / non-JSON — start fresh but back up
       const backup = client.config + ".bak-" + Date.now();
       fs.copyFileSync(client.config, backup);
       console.log(`  ⚠ existing config was not valid JSON; backed up to ${backup}`);
