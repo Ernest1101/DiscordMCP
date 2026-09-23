@@ -5,11 +5,11 @@
 <h1 align="center">DiscordMCP</h1>
 
 <p align="center">
-  <b>MCP-сервер для Discord</b> — дай Claude и другим ИИ управлять твоим аккаунтом
+  <b>Discord MCP server</b> — let Claude and other AI clients control your Discord account
 </p>
 
 <p align="center">
-  <a href="#установка"><img src="https://img.shields.io/badge/node-%E2%89%A518-5FA04E?logo=node.js&logoColor=white" alt="node"></a>
+  <a href="#installation"><img src="https://img.shields.io/badge/node-%E2%89%A518-5FA04E?logo=node.js&logoColor=white" alt="node"></a>
   <a href="#"><img src="https://img.shields.io/badge/MCP-compatible-000?logo=anthropic&logoColor=white" alt="mcp"></a>
   <a href="#"><img src="https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white" alt="discord"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="license"></a>
@@ -17,30 +17,30 @@
 
 ---
 
-MCP-сервер, который даёт Claude и другим ИИ доступ к твоему Discord: читать каналы, писать сообщения, работать с личками, реакциями и т.д. Работает через **user-токен** (self-bot) с помощью `discord.js-selfbot-v13`.
+An MCP server that gives Claude and other AI assistants access to your Discord: read channels, send messages, manage DMs, react, search, and more. Works via a **user token** (self-bot) powered by `discord.js-selfbot-v13`.
 
-> ⚠️ **Осторожно.** Использование self-bot нарушает Discord ToS. Discord может забанить аккаунт. Используй на свой страх и риск, лучше на второстепенном аккаунте. Никому не показывай свой токен — он даёт полный контроль над аккаунтом.
+> ⚠️ **Heads-up.** Self-botting violates Discord's ToS. Your account can get banned. Use at your own risk — ideally on a secondary account. Never share your token, it grants full control over the account.
 
-## Что умеет
+## Features
 
-| Инструмент | Что делает |
+| Tool | What it does |
 |---|---|
-| `who_am_i` | показывает залогиненный аккаунт |
-| `list_servers` | список всех серверов |
-| `get_server_info` | инфа о сервере |
-| `list_channels` | текстовые каналы сервера |
-| `read_messages` | читает последние N сообщений в канале |
-| `send_message` | отправляет сообщение (можно как reply) |
-| `edit_message` | редактирует своё сообщение |
-| `delete_message` | удаляет сообщение |
-| `list_dms` | список открытых личек и групп |
-| `open_dm` | открывает личку с юзером по ID |
-| `get_user_info` | инфа о юзере |
-| `search_messages` | ищет подстроку в последних сообщениях канала |
-| `add_reaction` | ставит реакцию |
-| `set_status` | меняет статус (online/idle/dnd/invisible) |
+| `who_am_i` | Show the logged-in account |
+| `list_servers` | List every guild the account is in |
+| `get_server_info` | Details for a specific guild |
+| `list_channels` | List text channels in a guild |
+| `read_messages` | Read the last N messages in a channel |
+| `send_message` | Send a message (can reply to another one) |
+| `edit_message` | Edit a message you sent |
+| `delete_message` | Delete a message |
+| `list_dms` | List open DMs and group DMs |
+| `open_dm` | Open a DM with a user by ID |
+| `get_user_info` | Look up a user by ID |
+| `search_messages` | Search a channel's recent messages for a substring |
+| `add_reaction` | React to a message |
+| `set_status` | Change presence (online/idle/dnd/invisible) |
 
-## Установка
+## Installation
 
 ```bash
 git clone https://github.com/Ernest1101/DiscordMCP.git
@@ -49,59 +49,59 @@ npm install
 npm run build
 ```
 
-## Получение user-токена
+## Getting your user token
 
-1. Открой Discord в браузере.
-2. F12 → вкладка **Network**.
-3. Обнови страницу, найди любой запрос к `discord.com/api/...`.
-4. В заголовках запроса скопируй значение `authorization` — это и есть твой токен.
+1. Open Discord in a browser.
+2. F12 → **Network** tab.
+3. Reload the page and pick any request to `discord.com/api/...`.
+4. Copy the `authorization` header value — that's your token.
 
-Никогда не публикуй этот токен и не давай его никому.
+Never publish this token and never share it with anyone.
 
-## Настройка
+## Configuration
 
-Скопируй `.env.example` в `.env` и вставь токен:
+Copy `.env.example` to `.env` and paste your token:
 
 ```
-DISCORD_TOKEN=твой_токен_сюда
+DISCORD_TOKEN=your_token_here
 ```
 
-## Подключение к Claude Desktop
+## Claude Desktop setup
 
-Открой конфиг Claude Desktop:
+Open the Claude Desktop config:
 
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-Добавь в `mcpServers`:
+Add this under `mcpServers`:
 
 ```json
 {
   "mcpServers": {
     "discord": {
       "command": "node",
-      "args": ["C:\\путь\\к\\DiscordMCP\\dist\\index.js"],
+      "args": ["C:\\path\\to\\DiscordMCP\\dist\\index.js"],
       "env": {
-        "DISCORD_TOKEN": "твой_токен_сюда"
+        "DISCORD_TOKEN": "your_token_here"
       }
     }
   }
 }
 ```
 
-Перезапусти Claude Desktop. В списке инструментов появится `discord`.
+Restart Claude Desktop — the `discord` tool set will show up in the tools list.
 
-## Подключение к Claude Code
+## Claude Code setup
 
 ```bash
-claude mcp add discord -- node C:\путь\к\DiscordMCP\dist\index.js
+claude mcp add discord -- node C:\path\to\DiscordMCP\dist\index.js
 ```
 
-Токен подхватится из `.env` в папке проекта, либо задай его через `--env DISCORD_TOKEN=...`.
+The token will be picked up from `.env` in the project folder, or pass it via `--env DISCORD_TOKEN=...`.
 
-## Подключение к другим ИИ (Cursor, Cline, любой MCP-клиент)
+## Other MCP clients (Cursor, Cline, etc.)
 
-Сервер общается по stdio через стандарт MCP. Любой клиент, поддерживающий MCP, запускает его так же:
+The server speaks the standard MCP stdio protocol. Any MCP client launches it the same way:
 
 ```
 command: node
@@ -109,21 +109,21 @@ args:    ["dist/index.js"]
 env:     DISCORD_TOKEN=...
 ```
 
-## Разработка
+## Development
 
 ```bash
-npm run dev        # tsc в watch-режиме
-npm start          # запуск собранной версии
+npm run dev        # tsc in watch mode
+npm start          # run the built server
 ```
 
-## Примеры промптов для Claude
+## Example prompts for Claude
 
-- «Покажи список серверов»
-- «Прочитай последние 20 сообщений в канале 123456789»
-- «Отправь "привет" в канал 123456789»
-- «Найди в канале 123456789 все упоминания слова "deploy"»
-- «Открой личку с юзером 987654321 и отправь ему "тест"»
+- "List all my Discord servers"
+- "Read the last 20 messages from channel 123456789"
+- "Send 'hello' to channel 123456789"
+- "Search channel 123456789 for messages mentioning 'deploy'"
+- "Open a DM with user 987654321 and send them 'test'"
 
-## Лицензия
+## License
 
 MIT
