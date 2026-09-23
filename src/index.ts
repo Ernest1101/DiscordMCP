@@ -10,6 +10,12 @@ import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
+import {
+  loadSafetyConfig,
+  scrubOutbound,
+  scrubInbound,
+  SafetyError,
+} from "./safety.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +50,11 @@ if (!TOKEN) {
   );
   process.exit(1);
 }
+
+const safetyConfig = loadSafetyConfig();
+console.error(
+  `[discord-mcp] safety filter: mode=${safetyConfig.mode}, custom-words=${safetyConfig.customWords.length}${safetyConfig.logFile ? `, log=${safetyConfig.logFile}` : ""}`,
+);
 
 const client = new Client({
   checkUpdate: false,
@@ -283,24 +294,27 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
         if (!ch || !("messages" in ch)) throw new Error("Channel is not a text channel");
         const msgs = await (ch as TextChannel).messages.fetch({ limit });
         const lines = [...msgs.values()].reverse().map(formatMessage);
-        return text(lines.length ? lines.join("\n") : "no messages");
+        const out = lines.length ? lines.join("\n") : "no messages";
+        return text(scrubInbound(out, safetyConfig));
       }
 
       case "send_message": {
+        const content = scrubOutbound(String(a.content), safetyConfig);
         const ch = await client.channels.fetch(a.channel_id);
         if (!ch || !("send" in ch)) throw new Error("Channel does not support sending");
         const sent = await (ch as TextChannel).send({
-          content: a.content,
+          content,
           ...(a.reply_to ? { reply: { messageReference: a.reply_to } } : {}),
         } as any);
         return text(`sent id=${sent.id}`);
       }
 
       case "edit_message": {
+        const newContent = scrubOutbound(String(a.new_content), safetyConfig);
         const ch = await client.channels.fetch(a.channel_id);
         if (!ch || !("messages" in ch)) throw new Error("Channel is not a text channel");
         const m = await (ch as TextChannel).messages.fetch(a.message_id);
-        await m.edit(a.new_content);
+        await m.edit(newContent);
         return text(`edited id=${m.id}`);
       }
 
@@ -349,7 +363,8 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
           .filter((m) => m.content.toLowerCase().includes(q))
           .reverse()
           .map(formatMessage);
-        return text(hits.length ? hits.join("\n") : `no matches for "${a.query}"`);
+        const out = hits.length ? hits.join("\n") : `no matches for "${a.query}"`;
+        return text(scrubInbound(out, safetyConfig));
       }
 
       case "add_reaction": {

@@ -165,6 +165,52 @@ Token source is picked up in this order:
 2. File pointed to by `DISCORD_TOKEN_FILE` env var
 3. `DISCORD_TOKEN` env var (least safe — visible in configs)
 
+## Safety Word Filter
+
+DiscordMCP ships with a built-in **safety word filter** that guards against accidental credential leaks. It works in two directions:
+
+- **Outbound** — before any `send_message` / `edit_message` hits Discord, the content is scanned. If it looks like a Discord token, an Anthropic/OpenAI/GitHub/AWS/Slack/Stripe key, a JWT, a private-key block, a password assignment (`password = ...`), or your own `DISCORD_TOKEN`, the send is **refused** and the AI gets a `SafetyError`.
+- **Inbound** — every `read_messages` / `search_messages` response is scanned before returning to the AI. Any matches are replaced with `[REDACTED:token-type]`, so someone in a channel cannot trick the AI into forwarding a secret.
+
+### Modes
+
+Set via env var `SAFETY_MODE`:
+
+| Mode | Behavior |
+|---|---|
+| `strict` *(default)* | Outbound blocked, inbound redacted |
+| `warn` | Nothing blocked, but every detection is logged |
+| `off` | Filter fully disabled |
+
+### Custom words
+
+Add your own secrets to the filter with `SAFETY_CUSTOM_WORDS` — comma-separated, minimum 4 chars each:
+
+```
+SAFETY_CUSTOM_WORDS=hunter2,internal-project-atlas,my-personal-note-code
+```
+
+Any occurrence in either direction triggers the filter.
+
+### Detection log
+
+Optional `SAFETY_LOG_FILE` writes a JSONL entry for each detection:
+
+```
+SAFETY_LOG_FILE=C:\Users\you\AppData\Roaming\discord-mcp\safety.log
+```
+
+Each line:
+```json
+{"ts":"2026-09-24T12:34:56.789Z","kind":"block","hits":["anthropic-key","password-assignment"]}
+```
+
+`kind` is `block` (outbound refused), `redact` (inbound masked), or `warn` (mode=warn, nothing changed).
+
+### What it catches by default
+
+Discord user/bot/MFA tokens · Anthropic `sk-ant-…` · OpenAI `sk-…` · GitHub `ghp_/gho_/…` · AWS access keys · Slack tokens · Google API keys · Stripe keys · JWTs · PEM private-key blocks · `password=…` / `api_key=…` assignments · your own `DISCORD_TOKEN`.
+
 ## Development
 
 ```bash
