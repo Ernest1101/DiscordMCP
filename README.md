@@ -1,4 +1,21 @@
-# DiscordMCP
+<p align="center">
+  <img src="assets/banner.jpg" alt="DiscordMCP" width="100%">
+</p>
+
+<h1 align="center">DiscordMCP</h1>
+
+<p align="center">
+  <b>MCP-сервер для Discord</b> — дай Claude и другим ИИ управлять твоим аккаунтом
+</p>
+
+<p align="center">
+  <a href="#установка"><img src="https://img.shields.io/badge/node-%E2%89%A518-5FA04E?logo=node.js&logoColor=white" alt="node"></a>
+  <a href="#"><img src="https://img.shields.io/badge/MCP-compatible-000?logo=anthropic&logoColor=white" alt="mcp"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Discord-5865F2?logo=discord&logoColor=white" alt="discord"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="license"></a>
+</p>
+
+---
 
 MCP-сервер, который даёт Claude и другим ИИ доступ к твоему Discord: читать каналы, писать сообщения, работать с личками, реакциями и т.д. Работает через **user-токен** (self-bot) с помощью `discord.js-selfbot-v13`.
 
