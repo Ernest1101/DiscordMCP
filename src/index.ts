@@ -5,7 +5,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { Client, TextChannel, DMChannel, GroupDMChannel, Message } from "discord.js-selfbot-v13";
+import { Client, TextChannel, DMChannel, Message } from "discord.js-selfbot-v13";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -47,7 +47,7 @@ if (!TOKEN) {
 
 const client = new Client({
   checkUpdate: false,
-});
+} as any);
 
 let ready = false;
 const readyPromise = new Promise<void>((resolve) => {
@@ -314,16 +314,14 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
 
       case "list_dms": {
         const chans = [...client.channels.cache.values()].filter(
-          (c) => c.type === "DM" || c.type === "GROUP_DM",
+          (c: any) => c.type === "DM" || c.type === "GROUP_DM",
         );
-        const lines = chans.map((c) => {
+        const lines = chans.map((c: any) => {
           if (c.type === "DM") {
-            const dm = c as DMChannel;
-            const u = dm.recipient;
+            const u = c.recipient;
             return `- DM with ${u?.username ?? "?"} (channel: ${c.id}, user: ${u?.id ?? "?"})`;
           }
-          const g = c as GroupDMChannel;
-          return `- Group "${g.name ?? "unnamed"}" (channel: ${c.id})`;
+          return `- Group "${c.name ?? "unnamed"}" (channel: ${c.id})`;
         });
         return text(lines.length ? lines.join("\n") : "no open DMs");
       }
